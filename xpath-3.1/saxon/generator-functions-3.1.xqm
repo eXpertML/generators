@@ -65,8 +65,7 @@ declare function gn:take($gen as map(*), $n as xs:integer) as map(*)
                let
                    $newResultGen2 :=  map:put($newResultGen, "move-next",   
                                               function($this as map(*)) 
-                                              {if(year-from-date(current-date()) > 2025) then gn:take($nextGen, $n -1)
-                                                 else map{}}) 
+                                              {gn:take($nextGen, $n -1)}) 
                  return
                    $newResultGen2 ,
     trace("take(" || $n || ") called.")                   
