@@ -642,12 +642,21 @@ let $gen2ToInf := map{"initialized" : true(),
      return
        gn:merge-sorted-generators($genOfGens) => gn:subrange(1, 30) => gn:to-array()", '&#xA;',
    (
-     let $ar1 := array {1 to 10000000},
+     let (:
+            This causes very significant delays - 5-6 seconds, because Saxon really creates the arrays in memory.
+            To avoid this we use subranges of $genN in the alternative expression that follows the commented ones ...
+         $ar1 := array {1 to 10000000},
          $ar2 := array {2 to 10000000},
          $ar3 := array {3 to 10000000},
+
          $gn1 := gn:make-generator-from-array($ar1),
          $gn2 := gn:make-generator-from-array($ar2),
          $gn3 := gn:make-generator-from-array($ar3),
+         :)
+         
+         $gn1 := $genN => gn:take(100000000),
+         $gn2 := $genN => gn:skip(1),
+         $gn3 := $genN => gn:skip(2),
          $genOfGens := gn:make-generator-from-array([$gn1, $gn2, $gn3])         
      return
        gn:merge-sorted-generators($genOfGens) => gn:subrange(1, 30) => gn:to-array()
