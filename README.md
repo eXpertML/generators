@@ -1,7 +1,7 @@
 # Generators and Deferred Evaluation in XPath
 
 These are the files containing the executable formal definition of the Generator Function Library, operating on generators, as defined in my 
-Balisage 2026 paper "Generators and Deferred Evaluation in XPath".
+Balisage 2026 paper [Generators and Deferred Evaluation in XPath](https://www.balisage.net/Proceedings/vol31/html/Novatchev01/BalisageVol31-Novatchev01.html).
 
 There are two separate code-bases - one for XPath 4, and one for XPath 3.1. 
 
