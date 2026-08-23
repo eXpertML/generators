@@ -3,8 +3,8 @@ declare namespace gn = "http://www.w3.org/2005/xpath-functions-2025/generator";
 declare namespace hlp = "http://www.w3.org/2005/xpath-functions-2025/generator";
 
 declare function hlp:while-do($input	as item()*,
-                             $predicate	as function($input as item()*) as xs:boolean,
-                             $action	as function($input as item()*) as item()*
+                             $predicate	as function(item()*) as xs:boolean,
+                             $action	as function(item()*) as item()*
                             ) as item()*
 {
   if(not($predicate($input)) ) then $input
@@ -25,7 +25,7 @@ declare function hlp:array-items($inArray as array(*)) as item()*
 
 declare function hlp:array-index-where(
                         $inArray as array(*),
-                        $predicate as function($member as item()*) as xs:boolean
+                        $predicate as function(item()*) as xs:boolean
                                        )
 {
   (1 to array:size($inArray))[$predicate($inArray(.))]
@@ -37,8 +37,8 @@ declare function gn:to-array($gen as map(*)) as array(*)
           function( $in-out-args) 
           { $in-out-args(1)?initialized and not($in-out-args(1)?end-reached) },                 
           function($in-out-args) 
-          { array{$in-out-args(1) =?> move-next(), 
-                  array:append($in-out-args(2), $in-out-args(1) =?> get-current())
+          { array{$in-out-args(1) ? move-next($in-out-args(1)), 
+                  array:append($in-out-args(2), $in-out-args(1) ? get-current($in-out-args(1)))
                  } 
            }         
  ) (2)
@@ -49,6 +49,8 @@ declare function gn:next($gen as map(*)) {$gen ? move-next($gen)};
 
 declare function gn:take($gen as map(*), $n as xs:integer) as map(*)
 {
+  (
+   (:  trace("take(" || $n || ") called."),  :)
   let $gen := if(not($gen?initialized)) then $gen ? move-next($gen)
                 else $gen
    return
@@ -61,9 +63,13 @@ declare function gn:take($gen as map(*), $n as xs:integer) as map(*)
            if($nextGen?end-reached) then $newResultGen
              else
                let
-                   $newResultGen2 :=  map:put($newResultGen, "move-next",   function($this as map(*)) {gn:take($nextGen, $n -1)}) 
+                   $newResultGen2 :=  map:put($newResultGen, "move-next",   
+                                              function($this as map(*)) 
+                                              {gn:take($nextGen, $n -1)}) 
                  return
-                   $newResultGen2  
+                   $newResultGen2 ,
+    trace("take(" || $n || ") called.")                   
+  )[1]
 };
 
 declare function gn:take-while($gen as map(*), $pred as function(item()*) as xs:boolean) as map(*)
@@ -87,7 +93,7 @@ declare function gn:take-while($gen as map(*), $pred as function(item()*) as xs:
                      return $newResultGen2    
 };
 
-declare function gn:skip-strict($gen as map(*), $n as xs:nonNegativeInteger, $issueErrorOnEmpty as xs:boolean) as map(*)
+declare function gn:skip-strict($gen as map(*), $n as xs:integer, $issueErrorOnEmpty as xs:boolean) as map(*)
 {
   if($n eq 0) then $gen
     else if($gen?end-reached) 
@@ -102,7 +108,7 @@ declare function gn:skip-strict($gen as map(*), $n as xs:nonNegativeInteger, $is
             else gn:empty-generator()    
 };
 
-declare function gn:skip($gen as map(*), $n as xs:nonNegativeInteger) as map(*)
+declare function gn:skip($gen as map(*), $n as xs:integer) as map(*)
 {
   gn:skip-strict($gen, $n, false())
 };
@@ -119,7 +125,7 @@ declare function gn:skip-while($gen as map(*), $pred as function(item()*) as xs:
             else gn:skip-while($gen ? move-next($gen), $pred)  
 };
 
-declare function gn:subrange($gen as map(*), $m as xs:positiveInteger, $n as xs:positiveInteger) as map(*)
+declare function gn:subrange($gen as map(*), $m as xs:integer, $n as xs:integer) as map(*)
 {
  gn:take(gn:skip($gen, $m - 1), $n - $m + 1)  
 };
@@ -140,7 +146,7 @@ declare function gn:first-where($gen as map(*), $pred as function(item()*) as xs
  (: gn:head(gn:filter($gen, $pred)) :)
 };
 
-declare function gn:chunk($gen as map(*), $size as xs:positiveInteger) as map(*)
+declare function gn:chunk($gen as map(*), $size as xs:integer) as map(*)
 {
   let $gen := if(not($gen?initialized)) then $gen ? move-next($gen)
                 else $gen
@@ -150,7 +156,7 @@ declare function gn:chunk($gen as map(*), $size as xs:positiveInteger) as map(*)
        let $thisChunk := gn:to-array(gn:take($gen, $size)),
            $cutGen := gn:skip($gen, $size),
            $resultGen := $gen => map:put("get-current",   function($this as map(*)){$thisChunk})
-                              => map:put("move-next",   fn($this as map(*)){gn:chunk($cutGen, $size)})
+                              => map:put("move-next",   function($this as map(*)){gn:chunk($cutGen, $size)})
         return $resultGen  
 };
 
@@ -201,7 +207,7 @@ declare function gn:for-each-pair($gen as map(*), $gen2 as map(*), $fun as funct
       if($gen?end-reached or $gen2?end-reached) then gn:empty-generator() 
        else  
          let $current := $fun($gen ? get-current($gen), $gen2 ? get-current($gen2)),
-             $newResultGen := map:put($gen, "get-current",   fn($this as map(*)){$current}),
+             $newResultGen := map:put($gen, "get-current",   function($this as map(*)){$current}),
              $nextGen1 := $gen ? move-next($gen),
              $nextGen2 := $gen2 ? move-next($gen2)
           return
@@ -215,7 +221,7 @@ declare function gn:for-each-pair($gen as map(*), $gen2 as map(*), $fun as funct
 
 declare function gn:zip($gen as map(*), $gen2 as map(*)) as map(*)
 {
-  gn:for-each-pair($gen, $gen2, fn($x1, $x2){[$x1, $x2]})
+  gn:for-each-pair($gen, $gen2, function($x1, $x2){[$x1, $x2]})
 };
 
 declare function gn:concat($gen as map(*), $gen2 as map(*)) as map(*)
@@ -259,7 +265,7 @@ declare function gn:prepend($gen as map(*), $value as item()*) as map(*)
            gn:concat($genSingle, $gen)  
       };    
       
-declare function gn:insert-at($gen as map(*), $pos as xs:positiveInteger, $value as item()*) as map(*)
+declare function gn:insert-at($gen as map(*), $pos as xs:integer, $value as item()*) as map(*)
       {
         let $genTail := gn:skip-strict($gen, $pos - 1, true())
          return
@@ -268,7 +274,7 @@ declare function gn:insert-at($gen as map(*), $pos as xs:positiveInteger, $value
               else gn:prepend($genTail, $value)               
       };     
       
-declare function gn:remove-at($gen as map(*), $pos as xs:nonNegativeInteger) as map(*)
+declare function gn:remove-at($gen as map(*), $pos as xs:integer) as map(*)
       {
         let $genTail := gn:skip-strict($gen, $pos, true())
           return
@@ -295,7 +301,7 @@ declare function gn:distinct($gen as map(*)) as map(*)
              let $priorValue := $gen ? get-current($gen)
                return
                  $gen => map:put("move-next",   function($this as map(*))
-                                     {gn:distinct(gn:remove-where(gn:tail($gen), fn($x){deep-equal($priorValue, $x)}))})  
+                                     {gn:distinct(gn:remove-where(gn:tail($gen), function($x){deep-equal($priorValue, $x)}))})  
       };
      
 declare function gn:replace($gen as map(*), $funIsMatching as function(item()*) as xs:boolean, $replacement as item()*) as map(*)
@@ -338,7 +344,7 @@ declare function gn:filter($gen as map(*), $pred as function(item()*) as xs:bool
   else
     let $getNextGoodGen := function($gen as map(*), 
                                     $pred as function(item()*) as xs:boolean)
-                           {gn:skip-while($gen, fn($x){not($pred($x))})},
+                           {gn:skip-while($gen, function($x){not($pred($x))})},
         $gen := if($gen?initialized) then $gen 
                   else $gen ? move-next($gen),
         $nextGoodGen := $getNextGoodGen($gen, $pred)                           
@@ -346,7 +352,7 @@ declare function gn:filter($gen as map(*), $pred as function(item()*) as xs:bool
       if($nextGoodGen?end-reached) then gn:empty-generator()
         else
           $nextGoodGen => map:put("move-next", 
-                                  fn($this as map(*)) {gn:filter($nextGoodGen => gn:skip(1), $pred)})
+                                  function($this as map(*)) {gn:filter($nextGoodGen => gn:skip(1), $pred)})
 };
  
 declare function gn:fold-left($gen as map(*), $init as item()*, $action as function(*)) as item()*
@@ -404,7 +410,7 @@ declare function gn:help-merge-sorted-generators($arrayOfGens as array(map(*))) 
     else
       let $starts := $arrayOfGens => array:for-each(function($gen){$gen => gn:value()}),
           $minVal := min($starts),
-          $firstMinIndex := ($starts => hlp:array-index-where(fn($val){$val eq $minVal}))[1],
+          $firstMinIndex := ($starts => hlp:array-index-where(function($val){$val eq $minVal}))[1],
           $firstMinGenerator := $arrayOfGens($firstMinIndex),
           $newArrayOfGens := $arrayOfGens => array:remove($firstMinIndex),
           $trimmedGenerator := $firstMinGenerator => gn:skip(1),
@@ -442,7 +448,7 @@ declare function gn:make-generator($provider as function(array(*)) as array(*)) 
                     => map:put("end-reached", false())
                     => map:put("get-current", function($this as map(*)) {$this?state?current})
                     => map:put("move-next",  
-                                 fn($this as map(*)) 
+                                 function($this as map(*)) 
                                 {
                                   let $nextProviderResult := $provider($this?state?providerState),
                                       $nextDataItemHolder := $nextProviderResult(2)
