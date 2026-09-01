@@ -1,0 +1,717 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<x:description xmlns:x="http://www.jenitennison.com/xslt/xspec"
+               xmlns:gn="http://www.w3.org/2005/xpath-functions-2025/generator"
+               xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+  <!-- ================================================================================
+       TIER 1: BASIC CONSUMPTION - Simple, linear operations
+       ================================================================================ -->
+
+  <x:scenario label="WHEN calling gn:to-array()">
+    <x:scenario label="GIVEN a finite generator from 1 to 5">
+      <x:call function="gn:to-array">
+        <x:param name="gen" as="map(*)" select="gn:make-generator-from-sequence((1, 2, 3, 4, 5))"/>
+      </x:call>
+      <x:expect label="EXPECT array [1, 2, 3, 4, 5]"
+                test="deep-equal($x:result, [1, 2, 3, 4, 5])"/>
+    </x:scenario>
+
+    <x:scenario label="GIVEN an empty generator">
+      <x:call function="gn:to-array">
+        <x:param name="gen" as="map(*)" select="gn:empty-generator()"/>
+      </x:call>
+      <x:expect label="EXPECT empty array"
+                test="array:size($x:result) eq 0"/>
+    </x:scenario>
+
+    <x:scenario label="GIVEN a generator with single element 42">
+      <x:call function="gn:to-array">
+        <x:param name="gen" as="map(*)" select="gn:make-generator-from-sequence((42))"/>
+      </x:call>
+      <x:expect label="EXPECT array [42]"
+                test="deep-equal($x:result, [42])"/>
+    </x:scenario>
+  </x:scenario>
+
+  <x:scenario label="WHEN calling gn:value()">
+    <x:scenario label="GIVEN a generator at first element">
+      <x:call function="gn:value">
+        <x:param name="gen" as="map(*)" select="gn:make-generator-from-sequence((10, 20, 30))"/>
+      </x:call>
+      <x:expect label="EXPECT current value is 10"
+                test="$x:result eq 10"/>
+    </x:scenario>
+  </x:scenario>
+
+  <x:scenario label="WHEN calling gn:next()">
+    <x:scenario label="GIVEN a generator from 10, 20, 30">
+      <x:call function="gn:next">
+        <x:param name="gen" as="map(*)" select="gn:make-generator-from-sequence((10, 20, 30))"/>
+      </x:call>
+      <x:expect label="EXPECT current value after advance is 20"
+                test="gn:value($x:result) eq 20"/>
+    </x:scenario>
+  </x:scenario>
+
+  <!-- ================================================================================
+       TIER 2: SLICING OPERATIONS - take, skip, subrange
+       ================================================================================ -->
+
+  <x:scenario label="WHEN calling gn:take()">
+    <x:scenario label="GIVEN a generator from 1 to 10">
+      <x:scenario label="GIVEN n as 3 elements to take">
+        <x:call function="gn:take">
+          <x:param name="gen" as="map(*)" select="gn:make-generator-from-sequence((1 to 10))"/>
+          <x:param name="n" as="xs:integer" select="3"/>
+        </x:call>
+        <x:variable name="result-array" select="gn:to-array($x:result)"/>
+        <x:expect label="EXPECT array [1, 2, 3]"
+                  test="deep-equal($result-array, [1, 2, 3])"/>
+      </x:scenario>
+
+      <x:scenario label="GIVEN n as 0 elements to take">
+        <x:call function="gn:take">
+          <x:param name="gen" as="map(*)" select="gn:make-generator-from-sequence((1 to 10))"/>
+          <x:param name="n" as="xs:integer" select="0"/>
+        </x:call>
+        <x:variable name="result-array" select="gn:to-array($x:result)"/>
+        <x:expect label="EXPECT empty array"
+                  test="array:size($result-array) eq 0"/>
+      </x:scenario>
+
+      <x:scenario label="GIVEN n as 100 (more than available)">
+        <x:call function="gn:take">
+          <x:param name="gen" as="map(*)" select="gn:make-generator-from-sequence((1 to 5))"/>
+          <x:param name="n" as="xs:integer" select="100"/>
+        </x:call>
+        <x:variable name="result-array" select="gn:to-array($x:result)"/>
+        <x:expect label="EXPECT all 5 available elements [1, 2, 3, 4, 5]"
+                  test="deep-equal($result-array, [1, 2, 3, 4, 5])"/>
+      </x:scenario>
+    </x:scenario>
+
+    <x:scenario label="GIVEN an empty generator">
+      <x:scenario label="GIVEN n as 5">
+        <x:call function="gn:take">
+          <x:param name="gen" as="map(*)" select="gn:empty-generator()"/>
+          <x:param name="n" as="xs:integer" select="5"/>
+        </x:call>
+        <x:variable name="result-array" select="gn:to-array($x:result)"/>
+        <x:expect label="EXPECT empty array"
+                  test="array:size($result-array) eq 0"/>
+      </x:scenario>
+    </x:scenario>
+  </x:scenario>
+
+  <x:scenario label="WHEN calling gn:skip()">
+    <x:scenario label="GIVEN a generator from 1 to 10">
+      <x:scenario label="GIVEN n as 3 elements to skip">
+        <x:call function="gn:skip">
+          <x:param name="gen" as="map(*)" select="gn:make-generator-from-sequence((1 to 10))"/>
+          <x:param name="n" as="xs:nonNegativeInteger" select="3"/>
+        </x:call>
+        <x:variable name="result-array" select="gn:to-array($x:result)"/>
+        <x:expect label="EXPECT array [4, 5, 6, 7, 8, 9, 10]"
+                  test="deep-equal($result-array, [4, 5, 6, 7, 8, 9, 10])"/>
+      </x:scenario>
+
+      <x:scenario label="GIVEN n as 0">
+        <x:call function="gn:skip">
+          <x:param name="gen" as="map(*)" select="gn:make-generator-from-sequence((1 to 10))"/>
+          <x:param name="n" as="xs:nonNegativeInteger" select="0"/>
+        </x:call>
+        <x:variable name="result-array" select="gn:to-array($x:result)"/>
+        <x:expect label="EXPECT array [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]"
+                  test="deep-equal($result-array, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10])"/>
+      </x:scenario>
+
+      <x:scenario label="GIVEN n as 10 (more than available)">
+        <x:call function="gn:skip">
+          <x:param name="gen" as="map(*)" select="gn:make-generator-from-sequence((1 to 5))"/>
+          <x:param name="n" as="xs:nonNegativeInteger" select="10"/>
+        </x:call>
+        <x:variable name="result-array" select="gn:to-array($x:result)"/>
+        <x:expect label="EXPECT empty array"
+                  test="array:size($result-array) eq 0"/>
+      </x:scenario>
+    </x:scenario>
+  </x:scenario>
+
+  <x:scenario label="WHEN calling gn:subrange()">
+    <x:scenario label="GIVEN a generator from 1 to 10">
+      <x:scenario label="GIVEN m as 3 and n as 7">
+        <x:call function="gn:subrange">
+          <x:param name="gen" as="map(*)" select="gn:make-generator-from-sequence((1 to 10))"/>
+          <x:param name="m" as="xs:integer" select="3"/>
+          <x:param name="n" as="xs:integer" select="7"/>
+        </x:call>
+        <x:variable name="result-array" select="gn:to-array($x:result)"/>
+        <x:expect label="EXPECT array [3, 4, 5, 6, 7]"
+                  test="deep-equal($result-array, [3, 4, 5, 6, 7])"/>
+      </x:scenario>
+
+      <x:scenario label="GIVEN m as 1 and n as 1">
+        <x:call function="gn:subrange">
+          <x:param name="gen" as="map(*)" select="gn:make-generator-from-sequence((1 to 10))"/>
+          <x:param name="m" as="xs:integer" select="1"/>
+          <x:param name="n" as="xs:integer" select="1"/>
+        </x:call>
+        <x:variable name="result-array" select="gn:to-array($x:result)"/>
+        <x:expect label="EXPECT array [1]"
+                  test="deep-equal($result-array, [1])"/>
+      </x:scenario>
+
+      <x:scenario label="GIVEN m as 5 and n as 3 (inverted range)">
+        <x:call function="gn:subrange">
+          <x:param name="gen" as="map(*)" select="gn:make-generator-from-sequence((1 to 10))"/>
+          <x:param name="m" as="xs:integer" select="5"/>
+          <x:param name="n" as="xs:integer" select="3"/>
+        </x:call>
+        <x:variable name="result-array" select="gn:to-array($x:result)"/>
+        <x:expect label="EXPECT empty array"
+                  test="array:size($result-array) eq 0"/>
+      </x:scenario>
+    </x:scenario>
+  </x:scenario>
+
+  <!-- ================================================================================
+       TIER 3: FILTERING OPERATIONS - filter, take-while, skip-while
+       ================================================================================ -->
+
+  <x:scenario label="WHEN calling gn:filter()">
+    <x:scenario label="GIVEN a generator from 1 to 10">
+      <x:scenario label="GIVEN predicate to filter even numbers">
+        <x:call function="gn:filter">
+          <x:param name="gen" as="map(*)" select="gn:make-generator-from-sequence((1 to 10))"/>
+          <x:param name="pred" as="function(item()*) as xs:boolean" select="function($n){$n mod 2 eq 0}"/>
+        </x:call>
+        <x:variable name="result-array" select="gn:to-array($x:result)"/>
+        <x:expect label="EXPECT array [2, 4, 6, 8, 10]"
+                  test="deep-equal($result-array, [2, 4, 6, 8, 10])"/>
+      </x:scenario>
+
+      <x:scenario label="GIVEN predicate matching no elements">
+        <x:call function="gn:filter">
+          <x:param name="gen" as="map(*)" select="gn:make-generator-from-sequence((1 to 5))"/>
+          <x:param name="pred" as="function(item()*) as xs:boolean" select="function($n){$n gt 100}"/>
+        </x:call>
+        <x:variable name="result-array" select="gn:to-array($x:result)"/>
+        <x:expect label="EXPECT empty array"
+                  test="array:size($result-array) eq 0"/>
+      </x:scenario>
+    </x:scenario>
+
+    <x:scenario label="GIVEN an empty generator">
+      <x:scenario label="GIVEN any predicate">
+        <x:call function="gn:filter">
+          <x:param name="gen" as="map(*)" select="gn:empty-generator()"/>
+          <x:param name="pred" as="function(item()*) as xs:boolean" select="function($n){$n eq $n}"/>
+        </x:call>
+        <x:variable name="result-array" select="gn:to-array($x:result)"/>
+        <x:expect label="EXPECT empty array"
+                  test="array:size($result-array) eq 0"/>
+      </x:scenario>
+    </x:scenario>
+  </x:scenario>
+
+  <x:scenario label="WHEN calling gn:take-while()">
+    <x:scenario label="GIVEN a generator from 1 to 10">
+      <x:scenario label="GIVEN predicate value less than 6">
+        <x:call function="gn:take-while">
+          <x:param name="gen" as="map(*)" select="gn:make-generator-from-sequence((1 to 10))"/>
+          <x:param name="pred" as="function(item()*) as xs:boolean" select="function($n){$n lt 6}"/>
+        </x:call>
+        <x:variable name="result-array" select="gn:to-array($x:result)"/>
+        <x:expect label="EXPECT array [1, 2, 3, 4, 5]"
+                  test="deep-equal($result-array, [1, 2, 3, 4, 5])"/>
+      </x:scenario>
+
+      <x:scenario label="GIVEN predicate never true">
+        <x:call function="gn:take-while">
+          <x:param name="gen" as="map(*)" select="gn:make-generator-from-sequence((1 to 10))"/>
+          <x:param name="pred" as="function(item()*) as xs:boolean" select="function($n){$n lt 1}"/>
+        </x:call>
+        <x:variable name="result-array" select="gn:to-array($x:result)"/>
+        <x:expect label="EXPECT empty array"
+                  test="array:size($result-array) eq 0"/>
+      </x:scenario>
+    </x:scenario>
+  </x:scenario>
+
+  <x:scenario label="WHEN calling gn:skip-while()">
+    <x:scenario label="GIVEN a generator from 1 to 10">
+      <x:scenario label="GIVEN predicate value less than 6">
+        <x:call function="gn:skip-while">
+          <x:param name="gen" as="map(*)" select="gn:make-generator-from-sequence((1 to 10))"/>
+          <x:param name="pred" as="function(item()*) as xs:boolean" select="function($n){$n lt 6}"/>
+        </x:call>
+        <x:variable name="result-array" select="gn:to-array($x:result)"/>
+        <x:expect label="EXPECT array [6, 7, 8, 9, 10]"
+                  test="deep-equal($result-array, [6, 7, 8, 9, 10])"/>
+      </x:scenario>
+
+      <x:scenario label="GIVEN predicate always true">
+        <x:call function="gn:skip-while">
+          <x:param name="gen" as="map(*)" select="gn:make-generator-from-sequence((1 to 10))"/>
+          <x:param name="pred" as="function(item()*) as xs:boolean" select="function($n){$n ge 1}"/>
+        </x:call>
+        <x:variable name="result-array" select="gn:to-array($x:result)"/>
+        <x:expect label="EXPECT empty array"
+                  test="array:size($result-array) eq 0"/>
+      </x:scenario>
+    </x:scenario>
+  </x:scenario>
+
+  <!-- ================================================================================
+       TIER 4: TRANSFORMATION - for-each, map operations
+       ================================================================================ -->
+
+  <x:scenario label="WHEN calling gn:for-each()">
+    <x:scenario label="GIVEN a generator from 1 to 5">
+      <x:scenario label="GIVEN function to double values">
+        <x:call function="gn:for-each">
+          <x:param name="gen" as="map(*)" select="gn:make-generator-from-sequence((1 to 5))"/>
+          <x:param name="fun" as="function(*)" select="function($n){2*$n}"/>
+        </x:call>
+        <x:variable name="result-array" select="gn:to-array($x:result)"/>
+        <x:expect label="EXPECT array [2, 4, 6, 8, 10]"
+                  test="deep-equal($result-array, [2, 4, 6, 8, 10])"/>
+      </x:scenario>
+
+      <x:scenario label="GIVEN identity function">
+        <x:call function="gn:for-each">
+          <x:param name="gen" as="map(*)" select="gn:make-generator-from-sequence((1 to 5))"/>
+          <x:param name="fun" as="function(*)" select="function($n){$n}"/>
+        </x:call>
+        <x:variable name="result-array" select="gn:to-array($x:result)"/>
+        <x:expect label="EXPECT array [1, 2, 3, 4, 5]"
+                  test="deep-equal($result-array, [1, 2, 3, 4, 5])"/>
+      </x:scenario>
+    </x:scenario>
+
+    <x:scenario label="GIVEN an empty generator">
+      <x:scenario label="GIVEN any function">
+        <x:call function="gn:for-each">
+          <x:param name="gen" as="map(*)" select="gn:empty-generator()"/>
+          <x:param name="fun" as="function(*)" select="function($n){$n * 10}"/>
+        </x:call>
+        <x:variable name="result-array" select="gn:to-array($x:result)"/>
+        <x:expect label="EXPECT empty array"
+                  test="array:size($result-array) eq 0"/>
+      </x:scenario>
+    </x:scenario>
+  </x:scenario>
+
+  <x:scenario label="WHEN calling gn:for-each-pair()">
+    <x:scenario label="GIVEN two generators (1-5 and 6-10)">
+      <x:scenario label="GIVEN function to sum pairs">
+        <x:call function="gn:for-each-pair">
+          <x:param name="gen" as="map(*)" select="gn:make-generator-from-sequence((1 to 5))"/>
+          <x:param name="gen2" as="map(*)" select="gn:make-generator-from-sequence((6 to 10))"/>
+          <x:param name="fun" as="function(*)" select="function($x, $y){$x + $y}"/>
+        </x:call>
+        <x:variable name="result-array" select="gn:to-array($x:result)"/>
+        <x:expect label="EXPECT array [7, 9, 11, 13, 15]"
+                  test="deep-equal($result-array, [7, 9, 11, 13, 15])"/>
+      </x:scenario>
+    </x:scenario>
+
+    <x:scenario label="GIVEN first generator shorter (1-3 and 1-10)">
+      <x:scenario label="GIVEN function to create pairs">
+        <x:call function="gn:for-each-pair">
+          <x:param name="gen" as="map(*)" select="gn:make-generator-from-sequence((1 to 3))"/>
+          <x:param name="gen2" as="map(*)" select="gn:make-generator-from-sequence((1 to 10))"/>
+          <x:param name="fun" as="function(*)" select="function($x, $y){[$x, $y]}"/>
+        </x:call>
+        <x:variable name="result-array" select="gn:to-array($x:result)"/>
+        <x:expect label="EXPECT array [[1, 1], [2, 2], [3, 3]]"
+                  test="deep-equal($result-array, [[1, 1], [2, 2], [3, 3]])"/>
+      </x:scenario>
+    </x:scenario>
+
+    <x:scenario label="GIVEN second generator is empty">
+      <x:scenario label="GIVEN function to add">
+        <x:call function="gn:for-each-pair">
+          <x:param name="gen" as="map(*)" select="gn:make-generator-from-sequence((1 to 5))"/>
+          <x:param name="gen2" as="map(*)" select="gn:empty-generator()"/>
+          <x:param name="fun" as="function(*)" select="function($x, $y){$x + $y}"/>
+        </x:call>
+        <x:variable name="result-array" select="gn:to-array($x:result)"/>
+        <x:expect label="EXPECT empty array"
+                  test="array:size($result-array) eq 0"/>
+      </x:scenario>
+    </x:scenario>
+  </x:scenario>
+
+  <!-- ================================================================================
+       TIER 5: AGGREGATION - fold-left, fold-right, scan-left
+       ================================================================================ -->
+
+  <x:scenario label="WHEN calling gn:fold-left()">
+    <x:scenario label="GIVEN a generator from 1 to 5">
+      <x:scenario label="GIVEN initial value 0 and sum action">
+        <x:call function="gn:fold-left">
+          <x:param name="gen" as="map(*)" select="gn:make-generator-from-sequence((1 to 5))"/>
+          <x:param name="init" as="xs:integer" select="0"/>
+          <x:param name="action" as="function(*)" select="function($acc, $x){$acc + $x}"/>
+        </x:call>
+        <x:expect label="EXPECT result is 15"
+                  test="$x:result eq 15"/>
+      </x:scenario>
+
+      <x:scenario label="GIVEN initial value 1 and multiply action">
+        <x:call function="gn:fold-left">
+          <x:param name="gen" as="map(*)" select="gn:make-generator-from-sequence((1 to 5))"/>
+          <x:param name="init" as="xs:integer" select="1"/>
+          <x:param name="action" as="function(*)" select="function($acc, $x){$acc * $x}"/>
+        </x:call>
+        <x:expect label="EXPECT result is 120"
+                  test="$x:result eq 120"/>
+      </x:scenario>
+    </x:scenario>
+
+    <x:scenario label="GIVEN an empty generator">
+      <x:scenario label="GIVEN initial value 42 and sum action">
+        <x:call function="gn:fold-left">
+          <x:param name="gen" as="map(*)" select="gn:empty-generator()"/>
+          <x:param name="init" as="xs:integer" select="42"/>
+          <x:param name="action" as="function(*)" select="function($acc, $x){$acc + $x}"/>
+        </x:call>
+        <x:expect label="EXPECT result is initial value 42"
+                  test="$x:result eq 42"/>
+      </x:scenario>
+    </x:scenario>
+  </x:scenario>
+
+  <x:scenario label="WHEN calling gn:scan-left()">
+    <x:scenario label="GIVEN a generator from 1 to 5">
+      <x:scenario label="GIVEN initial value 0 and sum action">
+        <x:call function="gn:scan-left">
+          <x:param name="gen" as="map(*)" select="gn:make-generator-from-sequence((1 to 5))"/>
+          <x:param name="init" as="xs:integer" select="0"/>
+          <x:param name="action" as="function(*)" select="function($acc, $x){$acc + $x}"/>
+        </x:call>
+        <x:variable name="result-array" select="gn:to-array($x:result)"/>
+        <x:expect label="EXPECT array [0, 1, 3, 6, 10, 15]"
+                  test="deep-equal($result-array, [0, 1, 3, 6, 10, 15])"/>
+      </x:scenario>
+    </x:scenario>
+
+    <x:scenario label="GIVEN an empty generator">
+      <x:scenario label="GIVEN initial value 100 and sum action">
+        <x:call function="gn:scan-left">
+          <x:param name="gen" as="map(*)" select="gn:empty-generator()"/>
+          <x:param name="init" as="xs:integer" select="100"/>
+          <x:param name="action" as="function(*)" select="function($acc, $x){$acc + $x}"/>
+        </x:call>
+        <x:variable name="result-array" select="gn:to-array($x:result)"/>
+        <x:expect label="EXPECT array [100]"
+                  test="deep-equal($result-array, [100])"/>
+      </x:scenario>
+    </x:scenario>
+  </x:scenario>
+
+  <!-- ================================================================================
+       TIER 6: COMBINATION - concat, zip, chunk
+       ================================================================================ -->
+
+  <x:scenario label="WHEN calling gn:concat()">
+    <x:scenario label="GIVEN first generator 1-3 and second generator 4-6">
+      <x:call function="gn:concat">
+        <x:param name="gen" as="map(*)" select="gn:make-generator-from-sequence((1 to 3))"/>
+        <x:param name="gen2" as="map(*)" select="gn:make-generator-from-sequence((4 to 6))"/>
+      </x:call>
+      <x:variable name="result-array" select="gn:to-array($x:result)"/>
+      <x:expect label="EXPECT array [1, 2, 3, 4, 5, 6]"
+                test="deep-equal($result-array, [1, 2, 3, 4, 5, 6])"/>
+    </x:scenario>
+
+    <x:scenario label="GIVEN first empty and second 10,20,30">
+      <x:call function="gn:concat">
+        <x:param name="gen" as="map(*)" select="gn:empty-generator()"/>
+        <x:param name="gen2" as="map(*)" select="gn:make-generator-from-sequence((10, 20, 30))"/>
+      </x:call>
+      <x:variable name="result-array" select="gn:to-array($x:result)"/>
+      <x:expect label="EXPECT array [10, 20, 30]"
+                test="deep-equal($result-array, [10, 20, 30])"/>
+    </x:scenario>
+
+    <x:scenario label="GIVEN both generators empty">
+      <x:call function="gn:concat">
+        <x:param name="gen" as="map(*)" select="gn:empty-generator()"/>
+        <x:param name="gen2" as="map(*)" select="gn:empty-generator()"/>
+      </x:call>
+      <x:variable name="result-array" select="gn:to-array($x:result)"/>
+      <x:expect label="EXPECT empty array"
+                test="array:size($result-array) eq 0"/>
+    </x:scenario>
+  </x:scenario>
+
+  <x:scenario label="WHEN calling gn:zip()">
+    <x:scenario label="GIVEN two generators (1-5 and 6-10)">
+      <x:call function="gn:zip">
+        <x:param name="gen" as="map(*)" select="gn:make-generator-from-sequence((1 to 5))"/>
+        <x:param name="gen2" as="map(*)" select="gn:make-generator-from-sequence((6 to 10))"/>
+      </x:call>
+      <x:variable name="result-array" select="gn:to-array($x:result)"/>
+      <x:expect label="EXPECT array [[1, 6], [2, 7], [3, 8], [4, 9], [5, 10]]"
+                test="deep-equal($result-array, [[1, 6], [2, 7], [3, 8], [4, 9], [5, 10]])"/>
+    </x:scenario>
+
+    <x:scenario label="GIVEN generators of different lengths (1-3 and 1-10)">
+      <x:call function="gn:zip">
+        <x:param name="gen" as="map(*)" select="gn:make-generator-from-sequence((1 to 3))"/>
+        <x:param name="gen2" as="map(*)" select="gn:make-generator-from-sequence((1 to 10))"/>
+      </x:call>
+      <x:variable name="result-array" select="gn:to-array($x:result)"/>
+      <x:expect label="EXPECT array [[1, 1], [2, 2], [3, 3]]"
+                test="deep-equal($result-array, [[1, 1], [2, 2], [3, 3]])"/>
+    </x:scenario>
+  </x:scenario>
+
+  <x:scenario label="WHEN calling gn:chunk()">
+    <x:scenario label="GIVEN a generator from 1 to 10">
+      <x:scenario label="GIVEN chunk size 3">
+        <x:call function="gn:chunk">
+          <x:param name="gen" as="map(*)" select="gn:make-generator-from-sequence((1 to 10))"/>
+          <x:param name="size" as="xs:integer" select="3"/>
+        </x:call>
+        <x:variable name="result-array" select="gn:to-array($x:result)"/>
+        <x:expect label="EXPECT 4 chunks: [1,2,3], [4,5,6], [7,8,9], [10]"
+                  test="deep-equal($result-array, [[1, 2, 3], [4, 5, 6], [7, 8, 9], [10]])"/>
+      </x:scenario>
+
+      <x:scenario label="GIVEN chunk size 2">
+        <x:call function="gn:chunk">
+          <x:param name="gen" as="map(*)" select="gn:make-generator-from-sequence((1 to 6))"/>
+          <x:param name="size" as="xs:integer" select="2"/>
+        </x:call>
+        <x:variable name="result-array" select="gn:to-array($x:result)"/>
+        <x:expect label="EXPECT array [[1, 2], [3, 4], [5, 6]]"
+                  test="deep-equal($result-array, [[1, 2], [3, 4], [5, 6]])"/>
+      </x:scenario>
+    </x:scenario>
+
+    <x:scenario label="GIVEN an empty generator">
+      <x:scenario label="GIVEN chunk size 5">
+        <x:call function="gn:chunk">
+          <x:param name="gen" as="map(*)" select="gn:empty-generator()"/>
+          <x:param name="size" as="xs:integer" select="5"/>
+        </x:call>
+        <x:variable name="result-array" select="gn:to-array($x:result)"/>
+        <x:expect label="EXPECT empty array"
+                  test="array:size($result-array) eq 0"/>
+      </x:scenario>
+    </x:scenario>
+  </x:scenario>
+
+  <!-- ================================================================================
+       TIER 7: MODIFICATION - append, prepend, insert-at, remove-at, distinct
+       ================================================================================ -->
+
+  <x:scenario label="WHEN calling gn:append()">
+    <x:scenario label="GIVEN a generator from 1 to 5">
+      <x:scenario label="GIVEN value to append 99">
+        <x:call function="gn:append">
+          <x:param name="gen" as="map(*)" select="gn:make-generator-from-sequence((1 to 5))"/>
+          <x:param name="value" as="xs:integer" select="99"/>
+        </x:call>
+        <x:variable name="result-array" select="gn:to-array($x:result)"/>
+        <x:expect label="EXPECT array [1, 2, 3, 4, 5, 99]"
+                  test="deep-equal($result-array, [1, 2, 3, 4, 5, 99])"/>
+      </x:scenario>
+    </x:scenario>
+
+    <x:scenario label="GIVEN an empty generator">
+      <x:scenario label="GIVEN value to append 42">
+        <x:call function="gn:append">
+          <x:param name="gen" as="map(*)" select="gn:empty-generator()"/>
+          <x:param name="value" as="xs:integer" select="42"/>
+        </x:call>
+        <x:variable name="result-array" select="gn:to-array($x:result)"/>
+        <x:expect label="EXPECT array [42]"
+                  test="deep-equal($result-array, [42])"/>
+      </x:scenario>
+    </x:scenario>
+  </x:scenario>
+
+  <x:scenario label="WHEN calling gn:prepend()">
+    <x:scenario label="GIVEN a generator from 1 to 5">
+      <x:scenario label="GIVEN value to prepend 0">
+        <x:call function="gn:prepend">
+          <x:param name="gen" as="map(*)" select="gn:make-generator-from-sequence((1 to 5))"/>
+          <x:param name="value" as="xs:integer" select="0"/>
+        </x:call>
+        <x:variable name="result-array" select="gn:to-array($x:result)"/>
+        <x:expect label="EXPECT array [0, 1, 2, 3, 4, 5]"
+                  test="deep-equal($result-array, [0, 1, 2, 3, 4, 5])"/>
+      </x:scenario>
+    </x:scenario>
+
+    <x:scenario label="GIVEN an empty generator">
+      <x:scenario label="GIVEN value to prepend 99">
+        <x:call function="gn:prepend">
+          <x:param name="gen" as="map(*)" select="gn:empty-generator()"/>
+          <x:param name="value" as="xs:integer" select="99"/>
+        </x:call>
+        <x:variable name="result-array" select="gn:to-array($x:result)"/>
+        <x:expect label="EXPECT array [99]"
+                  test="deep-equal($result-array, [99])"/>
+      </x:scenario>
+    </x:scenario>
+  </x:scenario>
+
+  <x:scenario label="WHEN calling gn:insert-at()">
+    <x:scenario label="GIVEN a generator from 1 to 5">
+      <x:scenario label="GIVEN position 3 and value 'X'">
+        <x:call function="gn:insert-at">
+          <x:param name="gen" as="map(*)" select="gn:make-generator-from-sequence((1 to 5))"/>
+          <x:param name="pos" as="xs:integer" select="3"/>
+          <x:param name="value" as="xs:string" select="'X'"/>
+        </x:call>
+        <x:variable name="result-array" select="gn:to-array($x:result)"/>
+        <x:expect label="EXPECT array [1, 2, 'X', 3, 4, 5]"
+                  test="deep-equal($result-array, [1, 2, 'X', 3, 4, 5])"/>
+      </x:scenario>
+
+      <x:scenario label="GIVEN position 1 and value 'FIRST'">
+        <x:call function="gn:insert-at">
+          <x:param name="gen" as="map(*)" select="gn:make-generator-from-sequence((1 to 5))"/>
+          <x:param name="pos" as="xs:integer" select="1"/>
+          <x:param name="value" as="xs:string" select="'FIRST'"/>
+        </x:call>
+        <x:variable name="result-array" select="gn:to-array($x:result)"/>
+        <x:expect label="EXPECT array ['FIRST', 1, 2, 3, 4, 5]"
+                  test="deep-equal($result-array, ['FIRST', 1, 2, 3, 4, 5])"/>
+      </x:scenario>
+    </x:scenario>
+  </x:scenario>
+
+  <x:scenario label="WHEN calling gn:remove-at()">
+    <x:scenario label="GIVEN a generator from 1 to 5">
+      <x:scenario label="GIVEN position 3 to remove">
+        <x:call function="gn:remove-at">
+          <x:param name="gen" as="map(*)" select="gn:make-generator-from-sequence((1 to 5))"/>
+          <x:param name="pos" as="xs:integer" select="3"/>
+        </x:call>
+        <x:variable name="result-array" select="gn:to-array($x:result)"/>
+        <x:expect label="EXPECT array [1, 2, 4, 5]"
+                  test="deep-equal($result-array, [1, 2, 4, 5])"/>
+      </x:scenario>
+
+      <x:scenario label="GIVEN position 1 to remove">
+        <x:call function="gn:remove-at">
+          <x:param name="gen" as="map(*)" select="gn:make-generator-from-sequence((1 to 5))"/>
+          <x:param name="pos" as="xs:integer" select="1"/>
+        </x:call>
+        <x:variable name="result-array" select="gn:to-array($x:result)"/>
+        <x:expect label="EXPECT array [2, 3, 4, 5]"
+                  test="deep-equal($result-array, [2, 3, 4, 5])"/>
+      </x:scenario>
+    </x:scenario>
+  </x:scenario>
+
+  <x:scenario label="WHEN calling gn:distinct()">
+    <x:scenario label="GIVEN a generator with duplicates (1,3,1,2,1,2,5,2,5)">
+      <x:call function="gn:distinct">
+        <x:param name="gen" as="map(*)" select="gn:make-generator-from-sequence((1, 3, 1, 2, 1, 2, 5, 2, 5))"/>
+      </x:call>
+      <x:variable name="result-array" select="gn:to-array($x:result)"/>
+      <x:expect label="EXPECT array [1, 3, 2, 5]"
+                test="deep-equal($result-array, [1, 3, 2, 5])"/>
+    </x:scenario>
+
+    <x:scenario label="GIVEN an empty generator">
+      <x:call function="gn:distinct">
+        <x:param name="gen" as="map(*)" select="gn:empty-generator()"/>
+      </x:call>
+      <x:variable name="result-array" select="gn:to-array($x:result)"/>
+      <x:expect label="EXPECT empty array"
+                test="array:size($result-array) eq 0"/>
+    </x:scenario>
+  </x:scenario>
+
+  <!-- ================================================================================
+       TIER 8: SEARCH & QUERY - contains, first-where, some-where
+       ================================================================================ -->
+
+  <x:scenario label="WHEN calling gn:contains()">
+    <x:scenario label="GIVEN a generator from 1 to 10">
+      <x:scenario label="GIVEN value 5 to search for">
+        <x:call function="gn:contains">
+          <x:param name="gen" as="map(*)" select="gn:make-generator-from-sequence((1 to 10))"/>
+          <x:param name="value" as="xs:integer" select="5"/>
+        </x:call>
+        <x:expect label="EXPECT true"
+                  test="$x:result = true()"/>
+      </x:scenario>
+
+      <x:scenario label="GIVEN value 15 to search for">
+        <x:call function="gn:contains">
+          <x:param name="gen" as="map(*)" select="gn:make-generator-from-sequence((1 to 10))"/>
+          <x:param name="value" as="xs:integer" select="15"/>
+        </x:call>
+        <x:expect label="EXPECT false"
+                  test="$x:result = false()"/>
+      </x:scenario>
+    </x:scenario>
+
+    <x:scenario label="GIVEN an empty generator">
+      <x:scenario label="GIVEN any value to search for">
+        <x:call function="gn:contains">
+          <x:param name="gen" as="map(*)" select="gn:empty-generator()"/>
+          <x:param name="value" as="xs:integer" select="1"/>
+        </x:call>
+        <x:expect label="EXPECT false"
+                  test="$x:result = false()"/>
+      </x:scenario>
+    </x:scenario>
+  </x:scenario>
+
+  <x:scenario label="WHEN calling gn:first-where()">
+    <x:scenario label="GIVEN a generator from 1 to 10">
+      <x:scenario label="GIVEN predicate to find first element greater than 6">
+        <x:call function="gn:first-where">
+          <x:param name="gen" as="map(*)" select="gn:make-generator-from-sequence((1 to 10))"/>
+          <x:param name="pred" as="function(item()*) as xs:boolean" select="function($n){$n gt 6}"/>
+        </x:call>
+        <x:expect label="EXPECT result is 7"
+                  test="$x:result eq 7"/>
+      </x:scenario>
+    </x:scenario>
+
+    <x:scenario label="GIVEN a generator from 1 to 5">
+      <x:scenario label="GIVEN predicate to find first element greater than 100">
+        <x:call function="gn:first-where">
+          <x:param name="gen" as="map(*)" select="gn:make-generator-from-sequence((1 to 5))"/>
+          <x:param name="pred" as="function(item()*) as xs:boolean" select="function($n){$n gt 100}"/>
+        </x:call>
+        <x:expect label="EXPECT empty sequence"
+                  test="empty($x:result)"/>
+      </x:scenario>
+    </x:scenario>
+  </x:scenario>
+
+  <x:scenario label="WHEN calling gn:some-where()">
+    <x:scenario label="GIVEN a generator from 1 to 5">
+      <x:scenario label="GIVEN predicate to test for any element greater than 3">
+        <x:call function="gn:some-where">
+          <x:param name="gen" as="map(*)" select="gn:make-generator-from-sequence((1 to 5))"/>
+          <x:param name="pred" as="function(item()*) as xs:boolean" select="function($n){$n gt 3}"/>
+        </x:call>
+        <x:expect label="EXPECT true"
+                  test="$x:result = true()"/>
+      </x:scenario>
+
+      <x:scenario label="GIVEN predicate to test for any element greater than 10">
+        <x:call function="gn:some-where">
+          <x:param name="gen" as="map(*)" select="gn:make-generator-from-sequence((1 to 5))"/>
+          <x:param name="pred" as="function(item()*) as xs:boolean" select="function($n){$n gt 10}"/>
+        </x:call>
+        <x:expect label="EXPECT false"
+                  test="$x:result = false()"/>
+      </x:scenario>
+    </x:scenario>
+  </x:scenario>
+
+</x:description>
