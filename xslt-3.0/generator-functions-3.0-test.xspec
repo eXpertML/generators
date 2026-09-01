@@ -4,10 +4,100 @@
                xmlns:xs="http://www.w3.org/2001/XMLSchema">
 
   <!-- ================================================================================
+       TIER 0: FACTORY FUNCTIONS - Generator creation
+       ================================================================================ -->
+
+  <x:scenario label="WHEN calling gn:empty-generator()" pending="implementation pending">
+    <x:scenario label="GIVEN no parameters">
+      <x:call function="gn:empty-generator"/>
+      <x:expect label="EXPECT result is a map"
+                test="$x:result instance of map(*)"/>
+    </x:scenario>
+  </x:scenario>
+
+  <x:scenario label="WHEN calling gn:make-generator-from-sequence()" pending="implementation pending">
+    <x:scenario label="GIVEN a sequence (1, 2, 3, 4, 5)">
+      <x:call function="gn:make-generator-from-sequence">
+        <x:param name="input" as="item()*" select="(1, 2, 3, 4, 5)"/>
+      </x:call>
+      <x:variable name="result-array" select="gn:to-array($x:result)"/>
+      <x:expect label="EXPECT array [1, 2, 3, 4, 5]"
+                test="deep-equal($result-array, [1, 2, 3, 4, 5])"/>
+    </x:scenario>
+
+    <x:scenario label="GIVEN an empty sequence">
+      <x:call function="gn:make-generator-from-sequence">
+        <x:param name="input" as="item()*" select="()"/>
+      </x:call>
+      <x:variable name="result-array" select="gn:to-array($x:result)"/>
+      <x:expect label="EXPECT empty array"
+                test="array:size($result-array) eq 0"/>
+    </x:scenario>
+
+    <x:scenario label="GIVEN a sequence with single element">
+      <x:call function="gn:make-generator-from-sequence">
+        <x:param name="input" as="item()*" select="42"/>
+      </x:call>
+      <x:variable name="result-array" select="gn:to-array($x:result)"/>
+      <x:expect label="EXPECT array [42]"
+                test="deep-equal($result-array, [42])"/>
+    </x:scenario>
+  </x:scenario>
+
+  <x:scenario label="WHEN calling gn:make-generator-from-array()" pending="implementation pending">
+    <x:scenario label="GIVEN an array [1, 2, 3, 4, 5]">
+      <x:call function="gn:make-generator-from-array">
+        <x:param name="arr" as="array(*)" select="[1, 2, 3, 4, 5]"/>
+      </x:call>
+      <x:variable name="result-array" select="gn:to-array($x:result)"/>
+      <x:expect label="EXPECT array [1, 2, 3, 4, 5]"
+                test="deep-equal($result-array, [1, 2, 3, 4, 5])"/>
+    </x:scenario>
+
+    <x:scenario label="GIVEN an empty array">
+      <x:call function="gn:make-generator-from-array">
+        <x:param name="arr" as="array(*)" select="[]"/>
+      </x:call>
+      <x:variable name="result-array" select="gn:to-array($x:result)"/>
+      <x:expect label="EXPECT empty array"
+                test="array:size($result-array) eq 0"/>
+    </x:scenario>
+
+    <x:scenario label="GIVEN an array with nested arrays">
+      <x:call function="gn:make-generator-from-array">
+        <x:param name="arr" as="array(*)" select="[[1, 2], [3, 4], [5, 6]]"/>
+      </x:call>
+      <x:variable name="result-array" select="gn:to-array($x:result)"/>
+      <x:expect label="EXPECT array [[1, 2], [3, 4], [5, 6]]"
+                test="deep-equal($result-array, [[1, 2], [3, 4], [5, 6]])"/>
+    </x:scenario>
+  </x:scenario>
+
+  <x:scenario label="WHEN calling gn:make-generator-from-map()" pending="implementation pending">
+    <x:scenario label="GIVEN a map with key-value pairs">
+      <x:call function="gn:make-generator-from-map">
+        <x:param name="map" as="map(*)" select="map{'John': 22, 'Ann': 28, 'Peter': 31}"/>
+      </x:call>
+      <x:variable name="result-array" select="gn:to-array($x:result)"/>
+      <x:expect label="EXPECT array contains 3 entries"
+                test="array:size($result-array) eq 3"/>
+    </x:scenario>
+
+    <x:scenario label="GIVEN an empty map">
+      <x:call function="gn:make-generator-from-map">
+        <x:param name="map" as="map(*)" select="map{}"/>
+      </x:call>
+      <x:variable name="result-array" select="gn:to-array($x:result)"/>
+      <x:expect label="EXPECT empty array"
+                test="array:size($result-array) eq 0"/>
+    </x:scenario>
+  </x:scenario>
+
+  <!-- ================================================================================
        TIER 1: BASIC CONSUMPTION - Simple, linear operations
        ================================================================================ -->
 
-  <x:scenario label="WHEN calling gn:to-array()">
+  <x:scenario label="WHEN calling gn:to-array()" pending="implementation pending">
     <x:scenario label="GIVEN a finite generator from 1 to 5">
       <x:call function="gn:to-array">
         <x:param name="gen" as="map(*)" select="gn:make-generator-from-sequence((1, 2, 3, 4, 5))"/>
@@ -33,7 +123,7 @@
     </x:scenario>
   </x:scenario>
 
-  <x:scenario label="WHEN calling gn:value()">
+  <x:scenario label="WHEN calling gn:value()" pending="implementation pending">
     <x:scenario label="GIVEN a generator at first element">
       <x:call function="gn:value">
         <x:param name="gen" as="map(*)" select="gn:make-generator-from-sequence((10, 20, 30))"/>
@@ -43,7 +133,7 @@
     </x:scenario>
   </x:scenario>
 
-  <x:scenario label="WHEN calling gn:next()">
+  <x:scenario label="WHEN calling gn:next()" pending="implementation pending">
     <x:scenario label="GIVEN a generator from 10, 20, 30">
       <x:call function="gn:next">
         <x:param name="gen" as="map(*)" select="gn:make-generator-from-sequence((10, 20, 30))"/>
@@ -57,7 +147,7 @@
        TIER 2: SLICING OPERATIONS - take, skip, subrange
        ================================================================================ -->
 
-  <x:scenario label="WHEN calling gn:take()">
+  <x:scenario label="WHEN calling gn:take()" pending="implementation pending">
     <x:scenario label="GIVEN a generator from 1 to 10">
       <x:scenario label="GIVEN n as 3 elements to take">
         <x:call function="gn:take">
@@ -103,7 +193,7 @@
     </x:scenario>
   </x:scenario>
 
-  <x:scenario label="WHEN calling gn:skip()">
+  <x:scenario label="WHEN calling gn:skip()" pending="implementation pending">
     <x:scenario label="GIVEN a generator from 1 to 10">
       <x:scenario label="GIVEN n as 3 elements to skip">
         <x:call function="gn:skip">
@@ -137,7 +227,7 @@
     </x:scenario>
   </x:scenario>
 
-  <x:scenario label="WHEN calling gn:subrange()">
+  <x:scenario label="WHEN calling gn:subrange()" pending="implementation pending">
     <x:scenario label="GIVEN a generator from 1 to 10">
       <x:scenario label="GIVEN m as 3 and n as 7">
         <x:call function="gn:subrange">
@@ -178,7 +268,7 @@
        TIER 3: FILTERING OPERATIONS - filter, take-while, skip-while
        ================================================================================ -->
 
-  <x:scenario label="WHEN calling gn:filter()">
+  <x:scenario label="WHEN calling gn:filter()" pending="implementation pending">
     <x:scenario label="GIVEN a generator from 1 to 10">
       <x:scenario label="GIVEN predicate to filter even numbers">
         <x:call function="gn:filter">
@@ -214,7 +304,7 @@
     </x:scenario>
   </x:scenario>
 
-  <x:scenario label="WHEN calling gn:take-while()">
+  <x:scenario label="WHEN calling gn:take-while()" pending="implementation pending">
     <x:scenario label="GIVEN a generator from 1 to 10">
       <x:scenario label="GIVEN predicate value less than 6">
         <x:call function="gn:take-while">
@@ -238,7 +328,7 @@
     </x:scenario>
   </x:scenario>
 
-  <x:scenario label="WHEN calling gn:skip-while()">
+  <x:scenario label="WHEN calling gn:skip-while()" pending="implementation pending">
     <x:scenario label="GIVEN a generator from 1 to 10">
       <x:scenario label="GIVEN predicate value less than 6">
         <x:call function="gn:skip-while">
@@ -266,7 +356,7 @@
        TIER 4: TRANSFORMATION - for-each, map operations
        ================================================================================ -->
 
-  <x:scenario label="WHEN calling gn:for-each()">
+  <x:scenario label="WHEN calling gn:for-each()" pending="implementation pending">
     <x:scenario label="GIVEN a generator from 1 to 5">
       <x:scenario label="GIVEN function to double values">
         <x:call function="gn:for-each">
@@ -302,7 +392,7 @@
     </x:scenario>
   </x:scenario>
 
-  <x:scenario label="WHEN calling gn:for-each-pair()">
+  <x:scenario label="WHEN calling gn:for-each-pair()" pending="implementation pending">
     <x:scenario label="GIVEN two generators (1-5 and 6-10)">
       <x:scenario label="GIVEN function to sum pairs">
         <x:call function="gn:for-each-pair">
@@ -347,7 +437,7 @@
        TIER 5: AGGREGATION - fold-left, fold-right, scan-left
        ================================================================================ -->
 
-  <x:scenario label="WHEN calling gn:fold-left()">
+  <x:scenario label="WHEN calling gn:fold-left()" pending="implementation pending">
     <x:scenario label="GIVEN a generator from 1 to 5">
       <x:scenario label="GIVEN initial value 0 and sum action">
         <x:call function="gn:fold-left">
@@ -383,7 +473,7 @@
     </x:scenario>
   </x:scenario>
 
-  <x:scenario label="WHEN calling gn:scan-left()">
+  <x:scenario label="WHEN calling gn:scan-left()" pending="implementation pending">
     <x:scenario label="GIVEN a generator from 1 to 5">
       <x:scenario label="GIVEN initial value 0 and sum action">
         <x:call function="gn:scan-left">
@@ -415,7 +505,7 @@
        TIER 6: COMBINATION - concat, zip, chunk
        ================================================================================ -->
 
-  <x:scenario label="WHEN calling gn:concat()">
+  <x:scenario label="WHEN calling gn:concat()" pending="implementation pending">
     <x:scenario label="GIVEN first generator 1-3 and second generator 4-6">
       <x:call function="gn:concat">
         <x:param name="gen" as="map(*)" select="gn:make-generator-from-sequence((1 to 3))"/>
@@ -447,7 +537,7 @@
     </x:scenario>
   </x:scenario>
 
-  <x:scenario label="WHEN calling gn:zip()">
+  <x:scenario label="WHEN calling gn:zip()" pending="implementation pending">
     <x:scenario label="GIVEN two generators (1-5 and 6-10)">
       <x:call function="gn:zip">
         <x:param name="gen" as="map(*)" select="gn:make-generator-from-sequence((1 to 5))"/>
@@ -469,7 +559,7 @@
     </x:scenario>
   </x:scenario>
 
-  <x:scenario label="WHEN calling gn:chunk()">
+  <x:scenario label="WHEN calling gn:chunk()" pending="implementation pending">
     <x:scenario label="GIVEN a generator from 1 to 10">
       <x:scenario label="GIVEN chunk size 3">
         <x:call function="gn:chunk">
@@ -509,7 +599,7 @@
        TIER 7: MODIFICATION - append, prepend, insert-at, remove-at, distinct
        ================================================================================ -->
 
-  <x:scenario label="WHEN calling gn:append()">
+  <x:scenario label="WHEN calling gn:append()" pending="implementation pending">
     <x:scenario label="GIVEN a generator from 1 to 5">
       <x:scenario label="GIVEN value to append 99">
         <x:call function="gn:append">
@@ -535,7 +625,7 @@
     </x:scenario>
   </x:scenario>
 
-  <x:scenario label="WHEN calling gn:prepend()">
+  <x:scenario label="WHEN calling gn:prepend()" pending="implementation pending">
     <x:scenario label="GIVEN a generator from 1 to 5">
       <x:scenario label="GIVEN value to prepend 0">
         <x:call function="gn:prepend">
@@ -561,7 +651,7 @@
     </x:scenario>
   </x:scenario>
 
-  <x:scenario label="WHEN calling gn:insert-at()">
+  <x:scenario label="WHEN calling gn:insert-at()" pending="implementation pending">
     <x:scenario label="GIVEN a generator from 1 to 5">
       <x:scenario label="GIVEN position 3 and value 'X'">
         <x:call function="gn:insert-at">
@@ -587,7 +677,7 @@
     </x:scenario>
   </x:scenario>
 
-  <x:scenario label="WHEN calling gn:remove-at()">
+  <x:scenario label="WHEN calling gn:remove-at()" pending="implementation pending">
     <x:scenario label="GIVEN a generator from 1 to 5">
       <x:scenario label="GIVEN position 3 to remove">
         <x:call function="gn:remove-at">
@@ -611,7 +701,7 @@
     </x:scenario>
   </x:scenario>
 
-  <x:scenario label="WHEN calling gn:distinct()">
+  <x:scenario label="WHEN calling gn:distinct()" pending="implementation pending">
     <x:scenario label="GIVEN a generator with duplicates (1,3,1,2,1,2,5,2,5)">
       <x:call function="gn:distinct">
         <x:param name="gen" as="map(*)" select="gn:make-generator-from-sequence((1, 3, 1, 2, 1, 2, 5, 2, 5))"/>
@@ -635,7 +725,7 @@
        TIER 8: SEARCH & QUERY - contains, first-where, some-where
        ================================================================================ -->
 
-  <x:scenario label="WHEN calling gn:contains()">
+  <x:scenario label="WHEN calling gn:contains()" pending="implementation pending">
     <x:scenario label="GIVEN a generator from 1 to 10">
       <x:scenario label="GIVEN value 5 to search for">
         <x:call function="gn:contains">
@@ -668,7 +758,7 @@
     </x:scenario>
   </x:scenario>
 
-  <x:scenario label="WHEN calling gn:first-where()">
+  <x:scenario label="WHEN calling gn:first-where()" pending="implementation pending">
     <x:scenario label="GIVEN a generator from 1 to 10">
       <x:scenario label="GIVEN predicate to find first element greater than 6">
         <x:call function="gn:first-where">
@@ -692,7 +782,7 @@
     </x:scenario>
   </x:scenario>
 
-  <x:scenario label="WHEN calling gn:some-where()">
+  <x:scenario label="WHEN calling gn:some-where()" pending="implementation pending">
     <x:scenario label="GIVEN a generator from 1 to 5">
       <x:scenario label="GIVEN predicate to test for any element greater than 3">
         <x:call function="gn:some-where">
